@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LibrasLingo - Vivências</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#58cc02">
+
+    <style>
+        :root {
+            --green: #58cc02; --blue: #1cb0f6; --red: #ff4b4b;
+            --gray: #e5e5e5; --text: #4b4b4b; --gold: #ffc107;
+            --bg-color: #ffffff; --card-bg: #ffffff;
+        }
+
+        /* VARIAVEIS DO MODO ESCURO */
+        body.dark-mode {
+            --bg-color: #121212; --card-bg: #1e1e1e;
+            --text: #e0e0e0; --gray: #333333;
+        }
+
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            margin: 0; background: var(--bg-color); color: var(--text);
+            display: flex; justify-content: center; transition: 0.3s;
+        }
+
+        .screen { display: none; width: 100%; max-width: 450px; min-height: 100vh; padding: 20px; box-sizing: border-box; flex-direction: column; overflow-y: auto; }
+        .active { display: flex; }
+
+        .card { background: var(--card-bg); border: 2px solid var(--gray); border-radius: 20px; padding: 40px 20px; text-align: center; margin-top: 50px; }
+        input { background: var(--card-bg); color: var(--text); width: 100%; padding: 15px; border: 2px solid var(--gray); border-radius: 15px; margin-bottom: 15px; font-size: 16px; outline: none; transition: 0.3s; box-sizing: border-box;}
+        input:focus { border-color: var(--blue); }
+
+        .btn { width: 100%; padding: 16px; border-radius: 15px; border: none; font-weight: bold; font-size: 16px; cursor: pointer; margin-bottom: 12px; text-transform: uppercase; border-bottom: 4px solid rgba(0,0,0,0.2); transition: 0.1s; box-sizing: border-box; }
+        .btn-green { background: var(--green); color: white; }
+        .btn-blue { background: var(--blue); color: white; }
+        .btn-option { background: var(--card-bg); border: 2px solid var(--gray); border-bottom: 4px solid var(--gray); color: var(--text); }
+        .btn:active { transform: translateY(2px); border-bottom-width: 2px; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .selected { border-color: var(--blue) !important; background-color: #e1f5fe !important; color: #1cb0f6 !important; }
+
+        .lesson-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+        .progress-bg { flex-grow: 1; height: 14px; background: var(--gray); margin: 0 15px; border-radius: 10px; }
+        .progress-fill { height: 100%; background: var(--green); width: 0%; border-radius: 10px; transition: 0.5s; }
+        .hearts { color: var(--red); font-size: 20px; font-weight: bold; }
+
+        .gif-box { width: 100%; height: 260px; background: var(--card-bg); border: 2px solid var(--gray); border-radius: 20px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; overflow: hidden; }
+        .gif-box img { max-width: 100%; max-height: 100%; border-radius: 10px; }
+
+        .feedback-bar { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 450px; padding: 25px; box-sizing: border-box; display: none; border-radius: 20px 20px 0 0; z-index: 10; }
+        .correct-bar { background: #d7ffb8; color: #58a700; border-top: 2px solid #b8e695; }
+        .wrong-bar { background: #ffdfe0; color: #ea2b2b; border-top: 2px solid #ffc1c1; }
+
+        .badge { font-size: 30px; filter: grayscale(100%); transition: 0.5s; }
+        .badge-active { filter: grayscale(0%); }
+
+        /* Estilo do Dicionário */
+        .dict-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .dict-item { background: var(--card-bg); border: 2px solid var(--gray); border-radius: 10px; padding: 10px; text-align: center; font-size: 12px; font-weight: bold;}
+        .dict-item img { width: 100%; height: 80px; object-fit: cover; border-radius: 5px; margin-bottom: 5px; }
+    </style>
+</head>
+<body>
+
+    <div id="screen-login" class="screen active">
+        <div class="card">
+            <h1 style="color: var(--green); font-size: 38px; margin-bottom: 5px;">LibrasLingo</h1>
+            <p id="auth-subtitle">Crie sua conta para começar!</p>
+            <input type="text" id="reg-name" placeholder="Seu nome">
+            <input type="email" id="reg-email" placeholder="E-mail">
+            <div style="position: relative; width: 100%; margin-bottom: 15px;">
+                <input type="password" id="reg-pass" placeholder="Senha" style="margin-bottom: 0; padding-right: 45px;">
+                <span id="eye-icon" onclick="app.togglePassword()" style="position: absolute; right: 15px; top: 15px; cursor: pointer; font-size: 18px;">👁️</span>
+            </div>
+            <p id="forgot-pass-link" style="display: none; font-size: 13px; text-align: right; margin-top: -5px; margin-bottom: 15px;">
+                <a href="#" onclick="alert('Email de recuperação enviado!')" style="color: #999;">Esqueci minha senha</a>
+            </p>
+            <button class="btn btn-green" id="btn-auth" onclick="app.handleAuth()">CRIAR CONTA</button>
+            <p style="font-size: 14px; margin-top: 15px;">
+                <span id="auth-toggle-text">Já tem uma conta?</span> 
+                <a href="#" onclick="app.toggleAuth()" id="auth-link" style="color: var(--blue); font-weight: bold; text-decoration: none;">Entrar</a>
+            </p>
+        </div>
+    </div>
+
+    <div id="screen-menu" class="screen">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin: 20px 0;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <div style="background: var(--gold); padding: 8px; border-radius: 10px; color: white;">✨</div>
+                <div style="text-align: left;">
+                    <span id="display-xp" style="font-size: 18px; font-weight: bold; color: #ff9800;">0</span>
+                    <small style="display: block; color: #999; font-size: 10px; font-weight: bold;">TOTAL XP</small>
+                </div>
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <button onclick="app.toggleDarkMode()" style="background: none; border: 2px solid var(--gray); border-radius: 10px; font-size: 18px; cursor: pointer;" title="Modo Escuro">🌙</button>
+                <div id="streak-display" style="background: var(--card-bg); padding: 5px 15px; border-radius: 15px; border: 2px solid var(--gray); font-weight: bold; color: var(--red);">🔥 0 Dias</div>
+            </div>
+        </div>
+
+        <h2 style="text-align: left;">Olá, <span id="user-display" style="color: var(--blue);"></span>!</h2>
+        
+        <div style="background: var(--blue); color: white; padding: 20px; border-radius: 20px; margin-bottom: 25px; text-align: left;">
+            <p style="margin: 0; font-weight: bold; font-size: 13px;">PROGRESSO DO CURSO</p>
+            <div style="background: rgba(255,255,255,0.3); height: 10px; border-radius: 5px; margin: 10px 0;">
+                <div id="total-progress" style="background: white; width: 0%; height: 100%; border-radius: 5px; transition: 1s;"></div>
+            </div>
+            <small id="progress-text">Você está começando sua jornada!</small>
+        </div>
+
+        <p style="text-align: left; font-weight: bold; color: #777;">MÓDULOS:</p>
+        <button id="mod-basico" class="btn btn-green" onclick="app.startIntro('basico')">🏠 1: SAUDAÇÕES</button>
+        <button id="mod-alimentos" class="btn btn-option" onclick="app.startIntro('alimentos')" disabled>🍎 2: ALIMENTOS 🔒</button>
+        <button id="mod-familia" class="btn btn-option" onclick="app.startIntro('familia')" disabled>👨‍👩‍👧 3: FAMÍLIA 🔒</button>
+        <button id="mod-cores" class="btn btn-option" onclick="app.startIntro('cores')" disabled>🎨 4: CORES 🔒</button>
+        <button id="mod-numeros" class="btn btn-option" onclick="app.startIntro('numeros')" disabled>🔢 5: NÚMEROS 🔒</button>
+
+        <button class="btn btn-blue" style="margin-top: 15px;" onclick="app.showDictionary()">📖 MEU DICIONÁRIO</button>
+
+        <div style="margin-top: 20px; border-top: 2px solid var(--gray); padding-top: 20px; margin-bottom: 40px;">
+            <p style="font-weight: bold; color: #999;">CONQUISTAS</p>
+            <div style="display: flex; justify-content: space-around;">
+                <span class="badge badge-active" title="Bem-vindo">🥇</span>
+                <span id="badge-perfect" class="badge" title="Perfeito">⭐</span>
+                <span id="badge-unlock" class="badge" title="Explorador">🔓</span>
+            </div>
+        </div>
+    </div>
+
+    <div id="screen-dict" class="screen">
+        <h2 style="color: var(--blue);">Meu Dicionário</h2>
+        <p style="color: #777; font-size: 14px;">Sinais que você já desbloqueou:</p>
+        <div id="dict-container" class="dict-grid"></div>
+        <button class="btn btn-green" style="margin-top: 20px;" onclick="app.showScreen('screen-menu')">VOLTAR</button>
+    </div>
+
+    <div id="screen-intro" class="screen" style="text-align: center;">
+        <h2 style="color: var(--blue); margin-top: 30px;">Vamos Aprender!</h2>
+        <p style="color: #777;">Observe o sinal e memorize o seu significado.</p>
+        <div class="gif-box"><img id="intro-gif" src="" alt="Aprender"></div>
+        <h1 id="intro-word" style="color: var(--text); font-size: 32px; margin: 10px 0 30px 0;">PALAVRA</h1>
+        <button id="btn-next-intro" class="btn btn-blue" onclick="app.nextIntro()">ENTENDI, PRÓXIMO</button>
+    </div>
+
+    <div id="screen-lesson" class="screen">
+        <div class="lesson-header">
+            <span onclick="app.showScreen('screen-menu')" style="cursor:pointer; font-size: 24px;">✕</span>
+            <div class="progress-bg"><div id="lesson-bar" class="progress-fill"></div></div>
+            <div id="lives-display" class="hearts"></div>
+        </div>
+        <h3 id="question-title">O que este sinal significa?</h3>
+        <div class="gif-box"><img id="lesson-gif" src="" alt="Libras"></div>
+        <div id="options-container"></div>
+        <button id="btn-verify" class="btn btn-green" style="margin-top: 10px;" onclick="app.verify()" disabled>VERIFICAR</button>
+        <div id="feedback-bar" class="feedback-bar">
+            <h3 id="feedback-msg" style="margin: 0 0 15px 0;"></h3>
+            <button class="btn btn-green" onclick="app.next()">CONTINUAR</button>
+        </div>
+    </div>
+
+    <script>
+        const app = {
+            username: "", totalXP: 0, lives: 3, score: 0, 
+            currentIdx: 0, introIdx: 0, selectedOption: null, isLoginMode: false,
+            currentQuestions: [], currentModuleKey: "", unlockedModules: ['basico'],
+            darkMode: false,
+            
+            moduleOrder: ['basico', 'alimentos', 'familia', 'cores', 'numeros'],
+
+            db: {
+                basico: [
+                    { g: "https://media.tenor.com/dxK9sCQrPNkAAAAj/oi-libras.gif", o: ["OI / OLÁ", "TUDO BEM?", "BOM DIA"], c: "OI / OLÁ" },
+                    { g: "", o: ["OBRIGADO", "DESCULPA", "POR FAVOR"], c: "OBRIGADO" },
+                    { g: "", o: ["DE NADA", "POR FAVOR", "COM LICENÇA"], c: "POR FAVOR" },
+                    { g: "", o: ["PRAZER", "ENTENDI", "DESCULPA"], c: "DESCULPA" },
+                    { g: "", o: ["ATÉ LOGO", "TCHAU", "BOA NOITE"], c: "TCHAU" }
+                ],
+                alimentos: [ { g: "https://via.placeholder.com/400x250?text=Sinal+de+MACA", o: ["MAÇÃ", "BANANA", "UVA"], c: "MAÇÃ" } ],
+                familia: [ { g: "https://via.placeholder.com/400x250?text=Sinal+de+MAE", o: ["PAI", "MÃE", "AVÓ"], c: "MÃE" } ],
+                cores: [ { g: "https://via.placeholder.com/400x250?text=Sinal+de+AZUL", o: ["VERDE", "AZUL", "AMARELO"], c: "AZUL" } ],
+                numeros: [ { g: "https://via.placeholder.com/400x250?text=Sinal+de+1", o: ["1", "2", "3"], c: "1" } ]
+            },
+
+            // --- SONS (Sintetizador no Navegador) ---
+            playSound(type) {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator(); const gain = ctx.createGain();
+                osc.connect(gain); gain.connect(ctx.destination);
+                if(type === 'correct') {
+                    osc.type = 'sine'; osc.frequency.setValueAtTime(800, ctx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(1200, ctx.currentTime + 0.1);
+                    gain.gain.setValueAtTime(0.3, ctx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
+                    osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.1);
+                } else {
+                    osc.type = 'sawtooth'; osc.frequency.setValueAtTime(300, ctx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(150, ctx.currentTime + 0.2);
+                    gain.gain.setValueAtTime(0.3, ctx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.2);
+                    osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.2);
+                }
+            },
+
+            // --- SISTEMA DE SALVAMENTO E PROGRESSO ---
+            loadData() {
+                this.totalXP = parseInt(localStorage.getItem('libras_xp')) || 0;
+                this.unlockedModules = JSON.parse(localStorage.getItem('libras_unlocked')) || ['basico'];
+                this.darkMode = localStorage.getItem('libras_dark') === 'true';
+                if(this.darkMode) document.body.classList.add('dark-mode');
+                document.getElementById('display-xp').innerText = this.totalXP;
+                
+                // Lógica do Progresso (Streak)
+                const today = new Date().toDateString();
+                const lastLogin = localStorage.getItem('libras_lastDate');
+                let streak = parseInt(localStorage.getItem('libras_streak')) || 0;
+                
+                if(lastLogin !== today) {
+                    const yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1);
+                    if(lastLogin === yesterday.toDateString()) { streak++; } else { streak = 1; }
+                    localStorage.setItem('libras_lastDate', today);
+                    localStorage.setItem('libras_streak', streak);
+                }
+                document.getElementById('streak-display').innerText = `🔥 ${streak} Dias`;
+                this.updateMenuUI();
+            },
+
+            saveProgress() {
+                localStorage.setItem('libras_xp', this.totalXP);
+                localStorage.setItem('libras_unlocked', JSON.stringify(this.unlockedModules));
+                this.updateMenuUI();
+            },
+
+            updateMenuUI() {
+                let progress = 0;
+                this.moduleOrder.forEach((mod, idx) => {
+                    const btn = document.getElementById('mod-' + mod);
+                    if(this.unlockedModules.includes(mod)) {
+                        if(btn) { btn.disabled = false; btn.style.opacity = "1"; btn.innerText = btn.innerText.replace('🔒', '🔓'); btn.classList.replace('btn-option', 'btn-green'); }
+                        progress = ((idx + 1) / this.moduleOrder.length) * 100;
+                    }
+                });
+                document.getElementById('total-progress').style.width = progress + "%";
+                if(this.unlockedModules.length > 1) document.getElementById('badge-unlock').classList.add('badge-active');
+            },
+
+            toggleDarkMode() {
+                this.darkMode = !this.darkMode;
+                document.body.classList.toggle('dark-mode', this.darkMode);
+                localStorage.setItem('libras_dark', this.darkMode);
+            },
+
+            // --- DICIONÁRIO ---
+            showDictionary() {
+                const container = document.getElementById('dict-container');
+                container.innerHTML = "";
+                this.unlockedModules.forEach(mod => {
+                    this.db[mod].forEach(q => {
+                        container.innerHTML += `<div class="dict-item"><img src="${q.g}" alt="${q.c}"><br>${q.c}</div>`;
+                    });
+                });
+                this.showScreen('screen-dict');
+            },
+
+            // --- NAVEGAÇÃO E AUTH ---
+            showScreen(id) { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); document.getElementById(id).classList.add('active'); },
+            togglePassword() { const p = document.getElementById('reg-pass'), e = document.getElementById('eye-icon'); if(p.type === 'password'){ p.type = 'text'; e.innerText = '🙈'; } else { p.type = 'password'; e.innerText = '👁️'; } },
+            toggleAuth() { this.isLoginMode = !this.isLoginMode; document.getElementById('auth-subtitle').innerText = this.isLoginMode ? "Bem-vindo de volta!" : "Crie sua conta para começar!"; document.getElementById('btn-auth').innerText = this.isLoginMode ? "ENTRAR" : "CRIAR CONTA"; document.getElementById('reg-name').style.display = this.isLoginMode ? "none" : "block"; document.getElementById('forgot-pass-link').style.display = this.isLoginMode ? "block" : "none"; document.getElementById('auth-toggle-text').innerText = this.isLoginMode ? "Ainda não tem conta?" : "Já tem uma conta?"; document.getElementById('auth-link').innerText = this.isLoginMode ? "Cadastrar" : "Entrar"; },
+            
+            handleAuth() {
+                const n = document.getElementById('reg-name').value, e = document.getElementById('reg-email').value, p = document.getElementById('reg-pass').value;
+                if (this.isLoginMode) {
+                    if (e === localStorage.getItem('libras_email') && p === localStorage.getItem('libras_pass')) {
+                        this.username = localStorage.getItem('libras_name'); document.getElementById('user-display').innerText = this.username; this.loadData(); this.showScreen('screen-menu');
+                    } else alert("E-mail ou senha incorretos!");
+                } else {
+                    if (!n || !e || !p) return alert("Preencha todos os campos!");
+                    localStorage.setItem('libras_name', n); localStorage.setItem('libras_email', e); localStorage.setItem('libras_pass', p);
+                    this.username = n; document.getElementById('user-display').innerText = n; this.loadData(); this.showScreen('screen-menu');
+                }
+            },
+
+            // --- INTRO & EXERCÍCIOS ---
+            startIntro(key) { this.currentModuleKey = key; this.currentQuestions = this.db[key]; this.introIdx = 0; this.loadIntro(); this.showScreen('screen-intro'); },
+            loadIntro() { const q = this.currentQuestions[this.introIdx]; document.getElementById('intro-gif').src = q.g; document.getElementById('intro-word').innerText = q.c; const b = document.getElementById('btn-next-intro'); if(this.introIdx === this.currentQuestions.length - 1) { b.innerText = "COMEÇAR EXERCÍCIOS!"; b.className = "btn btn-green"; } else { b.innerText = "ENTENDI, PRÓXIMO"; b.className = "btn btn-blue"; } },
+            nextIntro() { this.introIdx++; if(this.introIdx < this.currentQuestions.length) this.loadIntro(); else this.start(this.currentModuleKey); },
+            
+            start(key) { this.lives = 3; this.score = 0; this.currentIdx = 0; this.updateHearts(); this.loadQuestion(); this.showScreen('screen-lesson'); },
+            updateHearts() { document.getElementById('lives-display').innerText = "❤️".repeat(this.lives) + "🖤".repeat(3 - this.lives); },
+            
+            loadQuestion() {
+                const q = this.currentQuestions[this.currentIdx]; this.selectedOption = null; document.getElementById('lesson-gif').src = q.g; document.getElementById('lesson-bar').style.width = (this.currentIdx / this.currentQuestions.length * 100) + "%"; document.getElementById('btn-verify').style.display = "block"; document.getElementById('btn-verify').disabled = true; document.getElementById('feedback-bar').style.display = "none";
+                const c = document.getElementById('options-container'); c.innerHTML = "";
+                q.o.forEach(opt => { const b = document.createElement('button'); b.className = "btn btn-option"; b.innerText = opt; b.onclick = () => { document.querySelectorAll('.btn-option').forEach(x => x.classList.remove('selected')); b.classList.add('selected'); this.selectedOption = opt; document.getElementById('btn-verify').disabled = false; }; c.appendChild(b); });
+            },
+
+            verify() {
+                const c = this.currentQuestions[this.currentIdx].c; const bar = document.getElementById('feedback-bar'); document.getElementById('btn-verify').style.display = "none";
+                if(this.selectedOption === c) {
+                    this.playSound('correct'); this.score++; this.totalXP += 10; bar.className = "feedback-bar correct-bar"; document.getElementById('feedback-msg').innerText = "Muito bem! +10 XP ✨";
+                } else {
+                    this.playSound('wrong'); this.lives--; this.updateHearts(); bar.className = "feedback-bar wrong-bar"; document.getElementById('feedback-msg').innerText = "Ops! O sinal era: " + c;
+                    if(this.lives <= 0) { setTimeout(() => { alert("Vidas esgotadas!"); this.showScreen('screen-menu'); }, 300); return; }
+                }
+                document.getElementById('display-xp').innerText = this.totalXP; this.saveProgress(); bar.style.display = "block";
+            },
+
+            next() { this.currentIdx++; if(this.currentIdx < this.currentQuestions.length) this.loadQuestion(); else this.finish(); },
+
+            finish() {
+                if(this.score >= 4) {
+                    let b = this.score === 5 ? 50 : 20; this.totalXP += b;
+                    if(this.score === 5) document.getElementById('badge-perfect').classList.add('badge-active');
+                    const cIdx = this.moduleOrder.indexOf(this.currentModuleKey);
+                    if (cIdx < this.moduleOrder.length - 1 && !this.unlockedModules.includes(this.moduleOrder[cIdx + 1])) {
+                        this.unlockedModules.push(this.moduleOrder[cIdx + 1]);
+                    }
+                    this.saveProgress(); alert(`Incrível! Acertaste ${this.score} e ganhaste +${b} XP!`); this.showScreen('screen-menu');
+                } else { alert(`Acertaste ${this.score}. Precisa de 4 para passar!`); this.showScreen('screen-menu'); }
+            }
+        };
+    </script>
+</body>
+</html>
